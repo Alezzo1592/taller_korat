@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="taller06-korat">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/alloy4viz.jar!/" />
+      <root url="jar://$PROJECT_DIR$/korat.jar!/" />
+      <root url="jar://$PROJECT_DIR$/commons-cli-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/javassist.jar!/" />
+      <root url="jar://$PROJECT_DIR$/junit.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
