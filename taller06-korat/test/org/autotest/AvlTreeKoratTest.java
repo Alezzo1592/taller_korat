@@ -9,8 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
@@ -20,23 +18,44 @@ public class AvlTreeKoratTest {
 
 	@Before
 	public void deleteFile() {
-		File out = new File("avltree.ser");
+		File out = new File("avltreeMax4.ser");
+		if (out.exists()) {
+			out.delete();
+		}
+		out = new File("avltreeMax4Add0.ser");
 		if (out.exists()) {
 			out.delete();
 		}
 	}
 
 	@Test
-	public void testInsertAvlScope3()throws FileNotFoundException, IOException, ClassNotFoundException {
-		String[] args = new String[] { "--class", AvlTree.class.getName(), "--args", "4,0,4", "--serialize",
-				"avltree.ser" };
+	public void testKoratGenerateAVLAlmostHeight4() throws FileNotFoundException, IOException, ClassNotFoundException {
+		String[] args = new String[] { "--class", AvlTree.class.getName(), "--args", "1,0,4", "--serialize",
+				"avltreeMax4.ser"};
 		korat.Korat.main(args);
 
+		assertTrue(new File("avltreeMax4.ser").exists());
 
-		assertTrue(new File("avltree.ser").exists());
+		Set<AvlTree> generatedTrees = readAvlTrees("avltreeMax4.ser");
+		assertEquals(5, generatedTrees.size());
+	}
 
-		Set<AvlTree> generatedTrees = readAvlTrees("avltree.ser");
-		assertEquals(9, generatedTrees.size());
+	@Test
+	public void testKorat() throws FileNotFoundException, IOException, ClassNotFoundException {
+		String[] args = new String[]{"--class", AvlTree.class.getName(), "--args", "1,0,4", "--serialize",
+				"avltreeMax4Add0.ser"};
+		korat.Korat.main(args);
+
+		assertTrue(new File("avltreeMax4Add0.ser").exists());
+
+		Set<AvlTree> avlToAdd0 = readAvlTrees("avltreeMax4Add0.ser");
+		assertEquals(5, avlToAdd0.size());
+
+		for (AvlTree t : avlToAdd0) {
+			Integer originalSize = t.size();
+			t.insert(0);
+			assertEquals(originalSize + 1, t.size());
+		}
 	}
 
 	private Set<AvlTree> readAvlTrees(String filename)

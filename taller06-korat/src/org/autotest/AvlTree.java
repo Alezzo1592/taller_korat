@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Set;
+import java.util.Queue;
 
 import korat.finitization.IFinitization;
 import korat.finitization.IIntSet;
@@ -24,34 +23,6 @@ public class AvlTree implements Serializable {
 
 	private int size;
 
-	public boolean repOK() {
-
-		if (root == null)
-			return size == 0;
-		Set visited = new HashSet();
-		visited.add(root);
-		LinkedList workList = new LinkedList();
-		workList.add(root);
-		while (!workList.isEmpty()) {
-			AvlNode current = (AvlNode) workList.removeFirst();
-			if (current.left != null || current.right != null) {
-				int leftHeight = (current.left!=null)?current.left.height:0;
-				int rightHeight = (current.right!=null)?current.right.height:0;
-				int diferenceHeight = Math.abs(leftHeight-rightHeight);
-				if(diferenceHeight>1){
-					return false;
-				}
-				if(current.left!=null){
-					workList.add(current.left);
-				}
-				if(current.right!=null){
-					workList.add(current.right);
-				}
-			}
-		}
-		// checks that size is consistent
-		return true;
-	}
 	private void writeObject(ObjectOutputStream out) throws IOException {
 		out.defaultWriteObject();
 		out.writeObject(this.root);
@@ -216,28 +187,71 @@ public class AvlTree implements Serializable {
 	 *         diferencia de altura de sus subárboles izquierdo y derecho. Además,
 	 *         size coincide con el número de elementos del árbol.
 	 */
+	public boolean repOK() {
+		Queue nodesQueue = new LinkedList();
+		int totalOfNodes = 0;
+		if(root == null ||!isBalancedTree(root,null,null) || avlContainsCicles(root))
+			return false;
+		boolean isValid = true;
+		nodesQueue.add(root);
+		while(!nodesQueue.isEmpty() && isValid){
+			AvlNode actualNode = (AvlNode) nodesQueue.poll();
+			if(actualNode != null) {
+				totalOfNodes ++;
+				isValid &= balancedAvl(actualNode);
+				nodesQueue.add(actualNode.left);
+				nodesQueue.add(actualNode.right);
+			}
+		}
 
-
-	public static IFinitization finAvlTree(int nodesNum, int minSize, int maxSize) {
-		// Completar
-		IFinitization f = FinitizationFactory.create(AvlTree.class);
-		IObjSet nodes = f.createObjSet(AvlNode.class, nodesNum, true);
-		f.set("root", nodes);
-		f.set("AvlNode.left", nodes);
-		f.set("AvlNode.right", nodes);
-		IIntSet sizes = f.createIntSet(minSize, maxSize);
-		f.set("size", sizes);
-		return f;
+		return isValid && (totalOfNodes == this.size);
 	}
-	/*
-	IFinitization f = FinitizationFactory.create(BinaryTree.class);
-		IObjSet nodes = f.createObjSet(Node.class, nodesNum, true);
+
+	public boolean balancedAvl(AvlNode actualNode){
+		Integer leftHeight = (actualNode.left== null)?0:actualNode.left.height;
+		Integer rightHeight = (actualNode.right== null)?0:actualNode.right.height;
+		return  Math.abs(leftHeight-rightHeight) <= 1 && (Math.max(leftHeight,rightHeight) == actualNode.height-1);
+	}
+
+	private boolean avlContainsCicles(AvlNode root) {
+		return root.toStrings().contains("!tree");
+	}
+	private boolean isBalancedTree(AvlNode actualNode,Integer min, Integer max){
+		if(actualNode == null || (actualNode.left == null && actualNode.right == null))
+			return true;
+		if(min == null && max == null){
+			return isBalancedTree(actualNode.left,null,actualNode.data) && isBalancedTree(actualNode.right,actualNode.data,null);
+		}
+		else{
+			if(min != null && max != null){
+				return (min <= actualNode.data && actualNode.data < max) &&  isBalancedTree(actualNode.left,min,actualNode.data) && isBalancedTree(actualNode.right,actualNode.data,max);
+			}else if(min == null){
+				return (min <= actualNode.data) &&  isBalancedTree(actualNode.left,min,actualNode.data) && isBalancedTree(actualNode.right,actualNode.data,max);
+
+			}else{
+				return (actualNode.data < max) &&  isBalancedTree(actualNode.left,min,actualNode.data) && isBalancedTree(actualNode.right,actualNode.data,max);
+			}
+		}
+	}
+
+	public static IFinitization finAvlTree(int avlHeight, int minSize, int maxSize) {
+		IFinitization f = FinitizationFactory.create(AvlTree.class);
+		IIntSet AvlSize = f.createIntSet(minSize, maxSize);
+
+		Double nodesNum = Math.pow(2, avlHeight);
+		IObjSet nodes = f.createObjSet(AvlNode.class, nodesNum.intValue(), true);
+
 		f.set("root", nodes);
-		f.set("Node.left", nodes);
-		f.set("Node.right", nodes);
-		IIntSet sizes = f.createIntSet(minSize, maxSize);
-		f.set("size", sizes);
+
+		f.set("AvlNode.left",   nodes);
+		f.set("AvlNode.right",  nodes);
+
+		f.set("size", AvlSize);
+		f.set("AvlNode.data",   AvlSize);
+		f.set("AvlNode.height", AvlSize);
+
 		return f;
-	 */
+
+	}
 
 }
